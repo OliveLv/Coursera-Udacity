@@ -1,0 +1,123 @@
+Practical Machine Learning Project
+==================================
+Background
+----------
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
+
+Data 
+----
+The training data for this project are available here: 
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv  
+The test data are available here: 
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+
+Load libraries
+--------------
+
+    library(caret)
+    library(randomForest)
+Load data
+----------
+Loading data from local path,changing values '#DIV/0!' to NA,removing the first column which means the number of samples.  
+
+    data.file <- file.path('pml-training.csv')    
+    training<- read.csv(data.file, header = TRUE, sep = ',',na.string=c('#DIV/0!'))    
+    training[[1]]<-NULL 
+    data.file <- file.path('pml-testing.csv')
+    testing<- read.csv(data.file, header = TRUE, sep = ',',na.string=c('#DIV/0!'))
+    testing[[1]]<-NULL
+
+PreProcess
+----------
+Use function summary to get some information about training data,we can get that some columns exists substantial NAs,these may
+affect the performence of  model, so find those columns and remove them.We can also know every column expect 'classe' is numeric,
+thus I unify the types to numeric.
+
+    summary(training)
+     pitch_belt          yaw_belt       total_accel_belt kurtosis_roll_belt
+    Min.   :-55.8000   Min.   :-180.00   Min.   : 0.00    Min.   :-2.121    
+    1st Qu.:  1.7600   1st Qu.: -88.30   1st Qu.: 3.00    1st Qu.:-1.329    
+    Median :  5.2800   Median : -13.00   Median :17.00    Median :-0.899    
+    Mean   :  0.3053   Mean   : -11.21   Mean   :11.31    Mean   :-0.220    
+    3rd Qu.: 14.9000   3rd Qu.:  12.90   3rd Qu.:18.00    3rd Qu.:-0.219    
+    Max.   : 60.3000   Max.   : 179.00   Max.   :29.00    Max.   :33.000    
+                                                          NA's   :19226     
+    kurtosis_picth_belt kurtosis_yaw_belt skewness_roll_belt
+    Min.   :-2.190      Mode:logical      Min.   :-5.745    
+    1st Qu.:-1.107      NA's:19622        1st Qu.:-0.444    
+    Median :-0.151                        Median : 0.000    
+    Mean   : 4.334                        Mean   :-0.026    
+    3rd Qu.: 3.178                        3rd Qu.: 0.417    
+    Max.   :58.000                        Max.   : 3.595    
+    NA's   :19248                         NA's   :19225   
+    
+    nav <- sapply(colnames(training), function(x) if(sum(is.na(training[, x])) > 0.8*nrow(training)){return(T)}else{return(F)})
+    training <- training[, !nav]
+    testing<-testing[,!nav]
+    n<-length(colnames(training))-1
+    for(i in 1:n){
+      training[[i]]<-as.numeric(training[[i]])
+      testing[[i]]<-as.numeric(testing[[i]])
+    }
+
+Data Partition
+--------------
+Use function createDataPartition in caret to generate train and test sets from training set.
+
+    inTrain<-createDataPartition(training$classe,p=0.75,list=F)
+    train<-training[inTrain,]
+    test<-training[-inTrain,]
+Train Model
+-----------
+Use function randomForest in library randomForest and data train to train model.
+
+    modelFit<-randomForest(train$classe~.,data=train)
+Model Analysis
+----------
+Use model trained from data train to predict test set,compare the predict results to real results.
+
+    res<-predict(modelFit,test)
+    confusionMatrix(res,test$classe)
+    
+    Confusion Matrix and Statistics
+          Reference
+    Prediction    A    B    C    D    E
+                  A 1394    0    0    0    0
+                  B    1  948    2    0    0
+                  C    0    1  853    0    0
+                  D    0    0    0  804    0
+                  E    0    0    0    0  901
+    Overall Statistics
+                                          
+               Accuracy : 0.9992          
+                 95% CI : (0.9979, 0.9998)
+    No Information Rate : 0.2845          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.999           
+    Mcnemar's Test P-Value : NA              
+    Statistics by Class:
+                     Class: A Class: B Class: C Class: D Class: E
+    Sensitivity            0.9993   0.9989   0.9977   1.0000   1.0000
+    Specificity            1.0000   0.9992   0.9998   1.0000   1.0000
+    Pos Pred Value         1.0000   0.9968   0.9988   1.0000   1.0000
+    Neg Pred Value         0.9997   0.9997   0.9995   1.0000   1.0000
+    Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
+    Detection Rate         0.2843   0.1933   0.1739   0.1639   0.1837
+    Detection Prevalence   0.2843   0.1939   0.1741   0.1639   0.1837
+    Balanced Accuracy      0.9996   0.9991   0.9987   1.0000   1.0000
+
+Prediction
+-------
+Use model to predict testing set
+
+    prediction=predict(modelFit,testing)
+    prediction
+    
+    1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+    B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+    Levels: A B C D E
+
+
+
