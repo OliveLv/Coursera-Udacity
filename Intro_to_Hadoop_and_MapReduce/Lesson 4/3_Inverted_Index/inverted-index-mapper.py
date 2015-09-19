@@ -1,10 +1,9 @@
 #!/usr/bin/python
 
-# Format of each line is:
-# date\ttime\tstore name\titem description\tcost\tmethod of payment
-#
-# We want elements 2 (store name) and 4 (cost)
-# We need to write them out to standard output, separated by a tab
+# a MapReduce program that creates an index of all words that can be find in the body of a forum
+# post and node id they can be found in.
+# Do not parse the HTML. Just split the text on all whitespaces as well as the following charactors:
+# .,!?:;"()<>[]#$=-/
 
 import sys
 import re

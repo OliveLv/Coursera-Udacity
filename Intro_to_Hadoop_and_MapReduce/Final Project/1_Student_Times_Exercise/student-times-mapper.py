@@ -1,4 +1,8 @@
 #!/usr/bin/python
+
+# The task is to find for each student what is the hour during which the student has posted the 
+# most posts. output from reducers should be author_id hour
+
 import sys,re,csv,time
 
 flag=False

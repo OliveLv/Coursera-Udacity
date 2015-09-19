@@ -1,4 +1,8 @@
 #!/usr/bin/python
+
+# a MapReduce program that would process the forum_node data and output the length of the post and the 
+# average answer(just answer,not comment)length for each post.
+
 import sys,re,csv
 
 flag=False

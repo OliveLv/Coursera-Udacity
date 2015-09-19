@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# a MapReduce program which determines the number of hits to the site made by each different IP address.
+
 import sys
 
 for line in sys.stdin:
